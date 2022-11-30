@@ -4,7 +4,7 @@ from PIL import Image
 from PIL import ImageFilter
 
 import cv2
-from EdgeEnhancer import *
+from .EdgeEnhancer import *
 
 image = cv2.imread('test.png')
 

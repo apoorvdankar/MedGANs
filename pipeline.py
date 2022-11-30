@@ -5,6 +5,9 @@ from const import *
 from denoiser_utils import *
 from HDR.hdr import *
 from HDR.hdr_utils import *
+from EdgeEnhancer.EdgeEnhancer import *
+import warnings
+warnings.filterwarnings('ignore')
 
 # PART 1 OF PIPELINE: DENOISING 
 
@@ -29,12 +32,25 @@ noisy_image = noisy_batch.to(device)
 
 # Running the Denoisers on the noisy image to get denoised images
 random_denoiser_output = randomDenoiser(noisy_image)
+
 poisson_denoiser_output = poissonDenoiser(random_denoiser_output)
 
-# Uncomment the following line to see the outputof denoisers
-# show_tensor_images(poisson_denoiser_output, name='poisson_output')
+hdr_handler = HDR(True)
+hdr_output = hdr_handler.process_tensor_batch(poisson_denoiser_output)
+# poisson_denoiser_output
+# hdr_handler.process_tensor_batch(poisson_denoiser_output)
+
+edgeEnhancer = EdgeEnhancer()
+edgeEnhancer_output = edgeEnhancer.process_tensor_batch(hdr_output, (3, 3), 1.5)
+
+show_tensor_images(noisy_batch, name='noisy_batch')
+show_tensor_images(random_denoiser_output, name='random_denoiser_output')
+show_tensor_images(poisson_denoiser_output, name='poisson_denoiser_output')
+show_tensor_images(hdr_output, name='hdr_output')
+show_tensor_images(edgeEnhancer_output, name='edgeEnhancer_output')
 
 # Caluculating the metrics of the denoised images
+
 print('-'*50)
 print('Calculating the metrics of denoised Images')
 print('-'*50)
@@ -48,6 +64,12 @@ print('Denoised(Random) Image PSNR: ', random_denoiser_output_psnr.item())
 poisson_denoiser_output_psnr = calculate_batch_psnr(poisson_denoiser_output, real_batch)
 print('Denoised(Poisson) Image PSNR: ', poisson_denoiser_output_psnr.item())
 
+hdr_output_psnr = calculate_batch_psnr(hdr_output, real_batch)
+print('HDR Image PSNR: ', hdr_output_psnr.item())
+
+edgeEnhancer_output_psnr = calculate_batch_psnr(edgeEnhancer_output, real_batch)
+print('edgeEnhancer Image PSNR: ', edgeEnhancer_output_psnr.item())
+
 print('-'*50)
 
 noisy_image_simi = calculate_batch_ssim(noisy_image, real_batch)
@@ -59,21 +81,10 @@ print('Denoised(Random) Image SSIM: ', random_denoiser_output_simi.item())
 poisson_denoiser_output_simi = calculate_batch_ssim(poisson_denoiser_output, real_batch)
 print('Denoised(Poisson) Image SSIM: ', poisson_denoiser_output_simi.item())
 
-print('-'*50)
-
-# PART 2 OF PIPELINE: HDR CONVERSION
-
-# Loading the HRD Class
-
-hdr_handler = HDR(True)
-hdr_output = hdr_handler.process_tensor_batch(poisson_denoiser_output)
-
-hdr_output_psnr = calculate_batch_psnr(hdr_output, real_batch)
-print('HDR Image PSNR: ', hdr_output_psnr.item())
-
 hdr_output_simi = calculate_batch_ssim(hdr_output, real_batch)
 print('HDR Image SSIM: ', hdr_output_simi.item())
 
-# SHowing Final Output of the pipeline 
+edgeEnhancer_output_simi = calculate_batch_ssim(edgeEnhancer_output, real_batch)
+print('edgeEnhancer Image SSIM: ', edgeEnhancer_output_simi.item())
 
-show_tensor_images(hdr_output, name='hdr_output')
+print('-'*50)

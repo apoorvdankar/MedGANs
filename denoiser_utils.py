@@ -62,10 +62,9 @@ def show_tensor_images(tensor_img, num_images = 4, size=(1, 128, 128), name='img
     unflat_img = tensor_img.detach().cpu()
     img_grid = make_grid(unflat_img[:num_images], nrow=2)
     plt.figure(figsize=(7,7))
-    
     plt.imshow(img_grid.permute(1, 2, 0).squeeze())
     plt.savefig(f'./{name}.jpg')
-    plt.show()
+    # plt.show()
 
 def calculate_batch_psnr(noisy_image,real_image):
     psnr = PeakSignalNoiseRatio().to(device)
@@ -74,7 +73,6 @@ def calculate_batch_psnr(noisy_image,real_image):
 
 def calculate_batch_ssim(noisy_image, real_image):
     noisy_image = noisy_image.to(torch.double)
-    print(noisy_image.dtype, real_image.dtype)
     ssim = StructuralSimilarityIndexMeasure().to(device)
     ssim_score = ssim(noisy_image, real_image)
     return ssim_score
