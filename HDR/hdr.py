@@ -1,3 +1,4 @@
+import torch
 from hdr_utils import *
 
 class HDR():
@@ -24,3 +25,22 @@ class HDR():
 
         result_ = self.tonemap(image, L, R_, I_K, self.weighted_fusion)
         return result_
+
+    def process_tensor_batch(self, batch):
+        batch_np = batch.detach().numpy()
+
+        hdr_batch = torch.zeros(len(batch_np), 1, 128, 128).to('cpu')
+
+        for image_index in range(len(batch_np)):
+            image = batch_np[image_index].reshape((128,128))
+            
+            rgb_image = np.stack((image,)*3, axis=-1)
+            upscaled_image = cv2.convertScaleAbs(rgb_image, alpha=(255.0))
+            
+            output_image = self.process(upscaled_image) 
+            
+            output_image = output_image[:, :, 0].reshape((1, 128, 128))
+            
+            hdr_batch[image_index] = torch.Tensor(output_image)
+
+        return hdr_batch
