@@ -1,5 +1,5 @@
 import torch
-from hdr_utils import *
+from .hdr_utils import *
 
 class HDR():
 
@@ -29,7 +29,7 @@ class HDR():
     def process_tensor_batch(self, batch):
         batch_np = batch.detach().numpy()
 
-        hdr_batch = torch.zeros(len(batch_np), 1, 128, 128).to('cpu')
+        hdr_batch = torch.zeros([len(batch_np), 1, 128, 128], dtype=torch.float32).to('cpu')
 
         for image_index in range(len(batch_np)):
             image = batch_np[image_index].reshape((128,128))

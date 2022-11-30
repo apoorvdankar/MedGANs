@@ -8,6 +8,7 @@ from torchvision.utils import make_grid
 import random
 from torchmetrics import PeakSignalNoiseRatio
 from torchmetrics import StructuralSimilarityIndexMeasure
+from models import *
 
 import matplotlib.pyplot as plt 
 
@@ -54,22 +55,35 @@ def create_tensor_data(img_dir):
         random_noise = random.choice(noi)
         noisy_image = create_noisy_image(random_noise,image)
         noisy_images.append(noisy_image)
-    return torch.tensor(real_images).double(), torch.tensor(noisy_images).double()
+    return torch.tensor(np.array(real_images)).double(), torch.tensor(np.array(noisy_images)).double()
 
 
-def show_tensor_images(tensor_img, num_images = 4, size=(1, 128, 128)):
+def show_tensor_images(tensor_img, num_images = 4, size=(1, 128, 128), name='img'):
     unflat_img = tensor_img.detach().cpu()
     img_grid = make_grid(unflat_img[:num_images], nrow=2)
     plt.figure(figsize=(7,7))
+    
     plt.imshow(img_grid.permute(1, 2, 0).squeeze())
+    plt.savefig(f'./{name}.jpg')
     plt.show()
 
-def calculate_batch_psnr(fake_image,real_image):
+def calculate_batch_psnr(noisy_image,real_image):
     psnr = PeakSignalNoiseRatio().to(device)
-    psnr_score = psnr(fake_image, real_image)
+    psnr_score = psnr(noisy_image, real_image)
     return psnr_score
 
-def calculate_batch_ssim(fake_image, real_image):
+def calculate_batch_ssim(noisy_image, real_image):
+    noisy_image = noisy_image.to(torch.double)
+    print(noisy_image.dtype, real_image.dtype)
     ssim = StructuralSimilarityIndexMeasure().to(device)
-    ssim_score = ssim(fake_image, real_image)
+    ssim_score = ssim(noisy_image, real_image)
     return ssim_score
+
+def load_generator_from_ckpt(ckpt_file_name):
+    Denoiser = Generator()
+    DenoiserCKPT = torch.load(ckpt_file_name, map_location=torch.device(device))
+    Denoiser.load_state_dict(DenoiserCKPT["Gen"])
+    Denoiser.to(device)
+    Denoiser.double()
+    Denoiser.eval()
+    return Denoiser

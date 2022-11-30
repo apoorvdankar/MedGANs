@@ -6,7 +6,7 @@ import cv2
 from scipy.sparse import spdiags
 from scipy.sparse.linalg import spsolve, lsqr
 
-def wlsFilter(IN, Lambda=1.0, Alpha=1.2):
+def wlsFilter(IN, Lambda=0.01, Alpha=0.9):
     """
     IN        : Input image (2D grayscale image, type float)
     Lambda    : Balances between the data term and the smoothness term.
