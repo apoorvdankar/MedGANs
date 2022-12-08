@@ -26,7 +26,7 @@ Medical Imaging is used by radiologists for diagnostic purposes and to check for
 
 - <b>/ output_images</b> -> These include the result images at each step of the pipeline
 
-- <b>/ plot_metirc</b> -> Contains .ipynb file for plotting the graphs and their outputs as well
+- <b>/ plot_metric</b> -> Contains .ipynb file for plotting the graphs and their outputs as well
 
 - <b>/ test_data</b> -> Data being used for testing only
 
