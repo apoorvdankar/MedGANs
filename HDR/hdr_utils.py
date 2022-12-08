@@ -6,17 +6,7 @@ import cv2
 from scipy.sparse import spdiags
 from scipy.sparse.linalg import spsolve, lsqr
 
-def wlsFilter(IN, Lambda=0.01, Alpha=0.9):
-    """
-    IN        : Input image (2D grayscale image, type float)
-    Lambda    : Balances between the data term and the smoothness term.
-                Increasing lambda will produce smoother images.
-                Default value is 1.0
-    Alpha     : Gives a degree of control over the affinities by 
-                non-lineary scaling the gradients. Increasing alpha 
-                will result in sharper preserved edges. Default value: 1.2
-    """
-    
+def wls_decompositon(IN, Lambda=0.01, Alpha=0.9):
     
     L = np.log(IN+1e-22)        # Source image for the affinity matrix. log_e(IN)
     smallNum = 1e-6
@@ -51,34 +41,30 @@ def wlsFilter(IN, Lambda=0.01, Alpha=0.9):
 
     A = A + A.transpose() + spdiags(D, 0, k, k)
 
-    # Solve
+    # Solve using a least square solver
     OUT = spsolve(A, IN.flatten(order='F'))
     return np.reshape(OUT, (height, width), order='F') 
 
-def SRS(reflectance, illuminace):
-    """
-    Stretch the pixel whose illuminace brighter than mean value 
-    """
+def reflectance_scaling(reflectance, illuminace):
+
     r_R = 0.5
     def compare_func(r, i, m):    
         return r * (i/m)**r_R if i > m else r 
 
-    srs_fun = np.vectorize(compare_func)
+    reflectance_scaling_fun = np.vectorize(compare_func)
     mean_I = np.mean(illuminace)
-    result = srs_fun(reflectance, illuminace, mean_I)
+    result = reflectance_scaling_fun(reflectance, illuminace, mean_I)
     return result
 
-def scale_fun(v_, mean_i_, max_i_):
+def sigmoid_scaling_func(v_, mean_i_, max_i_):
     r = 1.0 - mean_i_/max_i_    
     fv = lambda v : r * ( 1/(1+np.exp(-1.0*(v - mean_i_))) - 0.5 )
     
     fv_k_ = [fv(vk) for vk in v_]
     return fv_k_
 
-def VIG(illuminace, inv_illuminace):
-    """
-    Generation of virtual exposure images(5 levels)
-    """
+def generate_illuminations(illuminace, inv_illuminace):
+
     inv_illuminace /= np.max(inv_illuminace)
     mi = np.mean(illuminace)
 
@@ -86,16 +72,14 @@ def VIG(illuminace, inv_illuminace):
     v1 = 0.2;    v3 = mi;    v2 = 0.5 * (v1 + v3)
     v5 = 0.8;    v4 = 0.5 * (v3 + v5)
     v = [v1, v2, v3, v4, v5]
-    fvk_list = scale_fun(v, mi, maxi)
+    fvk_list = sigmoid_scaling_func(v, mi, maxi)
 
     I_k = [(1 + fvk) * (illuminace + fvk * inv_illuminace) for fvk in fvk_list]  
 
     return I_k
 
-def tonereproduct(bgr_image, L, R_, Ik_list, FLAG):
-    """
-    Fusion of multiple exposure images.
-    """
+def tonemapping(bgr_image, L, R_, Ik_list, FLAG):
+
     Lk_list = [ np.exp(R_) * Ik for Ik in Ik_list ] 
     L = L + 1e-22 
 
@@ -130,17 +114,3 @@ def tonereproduct(bgr_image, L, R_, Ik_list, FLAG):
         r_ = ratio * r
         out = cv2.merge( ( b_, g_, r_ ) )
         return np.clip(out, 0.0, 1.0)
-
-def show_origin_and_output(origin, I):
-    """
-    Show final result.
-    """
-    plt.figure(figsize=(12, 6))
-    plt.subplots_adjust(left=0,right=1,bottom=0,top=1, wspace=0.005, hspace=0)
-
-    plt.subplot(121),plt.imshow(np.flip(origin, 2)),plt.title('Origin')
-    plt.axis('off')
-    plt.subplot(122),plt.imshow(np.flip(I, 2)),plt.title('Fake HDR')
-    plt.axis('off')
-    plt.savefig('compare.png', bbox_inches='tight', pad_inches=0)
-    plt.show()

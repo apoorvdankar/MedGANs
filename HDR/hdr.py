@@ -1,14 +1,23 @@
 import torch
 from .hdr_utils import *
 
+# The HDR method is an adaptation of a research paper given below: 
+'''
+J. S. Park, J. W. Soh, and N. I. Cho, Generation of High
+Dynamic Range Illumination from a Single Image for the Enhancement
+of Undesirably Illuminated Images. USA: Kluwer Academic
+Publishers, jul 2019, vol. 78, no. 14. [Online]. Available:
+https://doi.org/10.1007/s11042-019-7384-z
+'''
+
 class HDR():
 
     def __init__(self, flag):
         self.weighted_fusion = flag
-        self.wls = wlsFilter
-        self.srs = SRS
-        self.vig = VIG
-        self.tonemap = tonereproduct
+        self.wls = wls_decompositon
+        self.reflectance_scaling = reflectance_scaling
+        self.vig = generate_illuminations
+        self.tonemap = tonemapping
 
     def process(self, image):
 
@@ -20,7 +29,7 @@ class HDR():
 
         I = self.wls(S)
         R = np.log(L+1e-22) - np.log(I+1e-22)
-        R_ = self.srs(R, L)
+        R_ = self.reflectance_scaling(R, L)
         I_K = self.vig(L, 1.0 - L)
 
         result_ = self.tonemap(image, L, R_, I_K, self.weighted_fusion)
