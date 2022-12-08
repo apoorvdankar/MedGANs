@@ -1,5 +1,5 @@
 # MedGANs
 
-## Introduction 
+## About the Project
 
-The main idea of the project was to come up with a pipeline which takes input as a medical image directly from the instrument and outputs an enhanced image which is denoised and edge preserved. This is done through implementing generative adversarial networks to denoise the image to minimize the blurring effect common in traditional methods.
+Medical Imaging is used by radiologists for diagnostic purposes and to check for abnormalities, and these imaging techniques involve radiation. Overexposure to radiation can have an adverse impact on the human body, and using less radiation gives us a noisy output. Hence, radiologists find it difficult as there is a trade-off between the amount of radiation that can be used and the quality of the image. Moreover, noise in medical images can occur due to fluctuation of photons, a reflection of radiations from the subject, or due to instrumental vibration or faults. The proposed approach is a pipeline which starts with denoising using GANs architecture, in which two models have been trained, one for handling all kinds of noise and the second one specifically for Poisson noise. Further, post-processing methods like single-shot HDR using Retinex Filtering and Edge Enhancement using unsharp masking have been done to get a structurally more similar and enhanced denoised image.

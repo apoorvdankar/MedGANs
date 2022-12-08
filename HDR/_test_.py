@@ -24,6 +24,7 @@ def HDR_Image():
     # Get a preview of result using matplotlib
     show_origin_and_output(image, output_image)
 
+# When applying HDR on a tensor batch of images
 def HDR_Batch():
     batch = torch.load('output.pt', map_location = torch.device('cpu'))
 

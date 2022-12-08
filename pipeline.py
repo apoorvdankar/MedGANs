@@ -37,8 +37,6 @@ poisson_denoiser_output = poissonDenoiser(random_denoiser_output)
 
 hdr_handler = HDR(True)
 hdr_output = hdr_handler.process_tensor_batch(poisson_denoiser_output)
-# poisson_denoiser_output
-# hdr_handler.process_tensor_batch(poisson_denoiser_output)
 
 edgeEnhancer = EdgeEnhancer()
 edgeEnhancer_output = edgeEnhancer.process_tensor_batch(hdr_output, (3, 3), 1.5)
